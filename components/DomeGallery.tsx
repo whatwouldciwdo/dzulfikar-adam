@@ -56,7 +56,6 @@ const getDataNumber = (el: HTMLElement, name: string, fallback: number) => {
 };
 const isValidSrc = (s?: string) => !!s && s.trim() !== '';
 
-
 type CSSVarStyle = React.CSSProperties & {
   [key: `--${string}`]: string | number | undefined;
 };
@@ -123,22 +122,28 @@ export default function DomeGallery({
   grayscale = false
 }: DomeGalleryProps) {
 
+  // -------- load dari manifest statis di /public --------
   const [apiImages, setApiImages] = useState<ImageItem[]>([]);
   useEffect(() => {
     if (imagesProp && imagesProp.length) return;
     let active = true;
     (async () => {
       try {
-        const res = await fetch('/gallery/index.json', { cache: 'no-store' });
+        // coba manifest standar
+        let res = await fetch('/gallery-manifest.json', { cache: 'no-store' });
+        if (!res.ok) {
+          // fallback ke index.json jika Anda memilih nama itu
+          res = await fetch('/gallery/index.json', { cache: 'no-store' });
+        }
+        if (!res.ok) throw new Error('manifest not found');
         const data = (await res.json()) as { src: string; alt?: string }[];
-        if (active) setApiImages(data);
+        const clean = data.filter(it => isValidSrc(it?.src));
+        if (active) setApiImages(clean);
       } catch {
         if (active) setApiImages([]);
       }
     })();
-    return () => {
-      active = false;
-    };
+    return () => { active = false; };
   }, [imagesProp]);
 
   const pool = imagesProp && imagesProp.length ? imagesProp : apiImages;
@@ -594,27 +599,27 @@ export default function DomeGallery({
 
         if (refDiv) refDiv.remove();
         parent.style.transition = 'none';
-        el.style.transition = 'none';
+        (el as HTMLElement).style.transition = 'none';
 
         parent.style.setProperty('--rot-y-delta', `0deg`);
         parent.style.setProperty('--rot-x-delta', `0deg`);
 
         requestAnimationFrame(() => {
           el.style.visibility = '';
-          el.style.opacity = '0';
-          el.style.zIndex = '0';
+          (el as HTMLElement).style.opacity = '0';
+          (el as HTMLElement).style.zIndex = '0';
           focusedElRef.current = null;
           rootRef.current?.removeAttribute('data-enlarging');
 
           requestAnimationFrame(() => {
             parent.style.transition = '';
-            el.style.transition = 'opacity 300ms ease-out';
+            (el as HTMLElement).style.transition = 'opacity 300ms ease-out';
 
             requestAnimationFrame(() => {
-              el.style.opacity = '1';
+              (el as HTMLElement).style.opacity = '1';
               setTimeout(() => {
-                el.style.transition = '';
-                el.style.opacity = '';
+                (el as HTMLElement).style.transition = '';
+                (el as HTMLElement).style.opacity = '';
                 openingRef.current = false;
                 if (!draggingRef.current && rootRef.current?.getAttribute('data-enlarging') !== 'true') {
                   document.body.classList.remove('dg-scroll-lock');
@@ -639,9 +644,7 @@ export default function DomeGallery({
   }, [enlargeTransitionMs, unlockScroll]);
 
   useEffect(() => {
-    return () => {
-      document.body.classList.remove('dg-scroll-lock');
-    };
+    return () => { document.body.classList.remove('dg-scroll-lock'); };
   }, []);
 
   const rootStyle: CSSVarStyle = {
@@ -659,6 +662,7 @@ export default function DomeGallery({
         <div className="stage">
           <div ref={sphereRef} className="sphere">
             {items.map((it, i) => {
+              if (!isValidSrc(it.src)) return null; // safety: jangan render img kosong
               const itemStyle: CSSVarStyle = {
                 ['--offset-x']: it.x,
                 ['--offset-y']: it.y,
