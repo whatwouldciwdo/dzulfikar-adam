@@ -1,0 +1,19 @@
+
+.sphere-root,
+.sphere-root .sphere-main,
+.sphere-root .stage,
+.sphere-root .sphere {
+  background: transparent !important;
+}
+
+.sphere-root .overlay,
+.sphere-root .overlay--blur,
+.sphere-root .edge-fade {
+  display: none !important;
+}
+
+
+.sphere-root .item__image {
+  background: rgba(255,255,255,0.02);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
