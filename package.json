@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "gen:gallery": "node scripts/gen-gallery.mjs",
+    "prebuild": "npm run gen:gallery"
   },
   "dependencies": {
     "@react-three/fiber": "^9.4.0",

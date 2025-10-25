@@ -129,7 +129,7 @@ export default function DomeGallery({
     let active = true;
     (async () => {
       try {
-        const res = await fetch('/api/gallery', { cache: 'no-store' });
+        const res = await fetch('/gallery/index.json', { cache: 'no-store' });
         const data = (await res.json()) as { src: string; alt?: string }[];
         if (active) setApiImages(data);
       } catch {
